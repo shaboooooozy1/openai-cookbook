@@ -29,7 +29,7 @@ This project demonstrates how to use the [OpenAI Realtime API](https://platform.
    Navigate to the project directory and run:
 
    ```bash
-   npm install
+   npm ci
    ```
 
 5. **Run the Speaker & Listener Apps:**
@@ -49,6 +49,8 @@ This project demonstrates how to use the [OpenAI Realtime API](https://platform.
    ```bash
    node mirror-server/mirror-server.mjs
    ```
+
+   The mirror server has no authentication: anyone who can reach port 3001 can listen to every translated stream and inject audio. It binds `127.0.0.1` by default; set `MIRROR_HOST=0.0.0.0` and `MIRROR_ALLOWED_ORIGIN=<your app origin>` only on a trusted network.
 
 ### Adding a New Language
 

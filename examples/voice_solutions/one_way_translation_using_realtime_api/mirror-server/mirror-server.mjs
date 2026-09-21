@@ -6,7 +6,7 @@ import { Server } from 'socket.io';
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: { origin: '*' }
+  cors: { origin: process.env.MIRROR_ALLOWED_ORIGIN || 'http://localhost:3000' }
 });
 
 io.on('connection', (socket) => {
@@ -37,6 +37,6 @@ io.on('connection', (socket) => {
   });
 });
 
-server.listen(3001, () => {
+server.listen(3001, process.env.MIRROR_HOST || '127.0.0.1', () => {
   console.log('Socket.IO mirror server running on port 3001');
 });

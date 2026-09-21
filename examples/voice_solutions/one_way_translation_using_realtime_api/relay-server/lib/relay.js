@@ -9,9 +9,10 @@ export class RealtimeRelay {
   }
 
   listen(port) {
-    this.wss = new WebSocketServer({ port });
+    const host = process.env.RELAY_HOST || '127.0.0.1';
+    this.wss = new WebSocketServer({ port, host });
     this.wss.on('connection', this.connectionHandler.bind(this));
-    this.log(`Listening on ws://localhost:${port}`);
+    this.log(`Listening on ws://${host}:${port}`);
   }
 
   async connectionHandler(ws, req) {
@@ -26,6 +27,18 @@ export class RealtimeRelay {
 
     if (pathname !== '/') {
       this.log(`Invalid pathname: "${pathname}"`);
+      ws.close();
+      return;
+    }
+
+    // Browser WebSocket handshakes are not subject to the same-origin policy,
+    // so only accept connections from the documented app origin(s) before
+    // spending the server-side API key.
+    const allowedOrigins = (process.env.RELAY_ALLOWED_ORIGINS || 'http://localhost:3000')
+      .split(',')
+      .map((s) => s.trim());
+    if (!req.headers.origin || !allowedOrigins.includes(req.headers.origin)) {
+      this.log(`Rejected origin: "${req.headers.origin}"`);
       ws.close();
       return;
     }
