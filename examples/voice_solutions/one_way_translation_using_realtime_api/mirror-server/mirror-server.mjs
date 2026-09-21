@@ -5,8 +5,15 @@ import { Server } from 'socket.io';
 
 const app = express();
 const server = http.createServer(app);
+// The CRA dev server answers on both localhost and 127.0.0.1, so allow both
+// by default; MIRROR_ALLOWED_ORIGIN accepts a comma-separated list.
+const allowedOrigins = (
+  process.env.MIRROR_ALLOWED_ORIGIN || 'http://localhost:3000,http://127.0.0.1:3000'
+)
+  .split(',')
+  .map((s) => s.trim());
 const io = new Server(server, {
-  cors: { origin: process.env.MIRROR_ALLOWED_ORIGIN || 'http://localhost:3000' }
+  cors: { origin: allowedOrigins }
 });
 
 io.on('connection', (socket) => {

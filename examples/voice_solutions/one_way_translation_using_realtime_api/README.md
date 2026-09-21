@@ -50,7 +50,9 @@ This project demonstrates how to use the [OpenAI Realtime API](https://platform.
    node mirror-server/mirror-server.mjs
    ```
 
-   The mirror server has no authentication: anyone who can reach port 3001 can listen to every translated stream and inject audio. It binds `127.0.0.1` by default; set `MIRROR_HOST=0.0.0.0` and `MIRROR_ALLOWED_ORIGIN=<your app origin>` only on a trusted network.
+   The mirror server has no authentication: anyone who can reach port 3001 can listen to every translated stream and inject audio. It binds `127.0.0.1` by default and only accepts connections from `http://localhost:3000` and `http://127.0.0.1:3000`; set `MIRROR_HOST=0.0.0.0` and `MIRROR_ALLOWED_ORIGIN=<comma-separated app origins>` only on a trusted network.
+
+   The optional relay server (`npm run relay`) follows the same pattern: it binds `127.0.0.1` and accepts WebSocket connections only from those two origins. Override with `RELAY_HOST` and `RELAY_ALLOWED_ORIGINS=<comma-separated app origins>` if you serve the app from elsewhere.
 
 ### Adding a New Language
 

@@ -33,8 +33,11 @@ export class RealtimeRelay {
 
     // Browser WebSocket handshakes are not subject to the same-origin policy,
     // so only accept connections from the documented app origin(s) before
-    // spending the server-side API key.
-    const allowedOrigins = (process.env.RELAY_ALLOWED_ORIGINS || 'http://localhost:3000')
+    // spending the server-side API key. The CRA dev server answers on both
+    // localhost and 127.0.0.1, so allow both by default.
+    const allowedOrigins = (
+      process.env.RELAY_ALLOWED_ORIGINS || 'http://localhost:3000,http://127.0.0.1:3000'
+    )
       .split(',')
       .map((s) => s.trim());
     if (!req.headers.origin || !allowedOrigins.includes(req.headers.origin)) {
