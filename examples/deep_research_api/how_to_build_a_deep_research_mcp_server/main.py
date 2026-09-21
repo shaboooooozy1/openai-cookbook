@@ -7,6 +7,7 @@ capabilities designed to work with ChatGPT's deep research feature.
 """
 
 import logging
+import os
 from typing import Dict, List, Any
 from fastmcp import FastMCP
 from openai import OpenAI
@@ -16,8 +17,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # OpenAI configuration
-OPENAI_API_KEY = ""
-VECTOR_STORE_ID = "" #OpenAI Vector Store ID https://platform.openai.com/storage/vector_stores/
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
+VECTOR_STORE_ID = os.environ.get("VECTOR_STORE_ID", "")  # https://platform.openai.com/storage/vector_stores/
 
 # Initialize OpenAI client
 openai_client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
@@ -184,19 +185,25 @@ def main():
         )
         raise ValueError("OpenAI API key is required")
 
+    if not VECTOR_STORE_ID:
+        raise ValueError("VECTOR_STORE_ID environment variable is required")
+
     logger.info(f"Using vector store: {VECTOR_STORE_ID}")
 
     # Create the MCP server
     server = create_server()
 
-    # Configure and start the server
-    logger.info("Starting MCP server on 0.0.0.0:8000")
+    # Configure and start the server. Bind loopback by default; set MCP_HOST=0.0.0.0
+    # only when the server is intentionally exposed beyond this machine.
+    host = os.environ.get("MCP_HOST", "127.0.0.1")
+    port = int(os.environ.get("MCP_PORT", "8000"))
+    logger.info(f"Starting MCP server on {host}:{port}")
     logger.info("Server will be accessible via SSE transport")
     logger.info("Connect this server to ChatGPT Deep Research for testing")
 
     try:
         # Use FastMCP's built-in run method with SSE transport
-        server.run(transport="sse", host="0.0.0.0", port=8000)
+        server.run(transport="sse", host=host, port=port)
     except KeyboardInterrupt:
         logger.info("Server stopped by user")
     except Exception as e:
