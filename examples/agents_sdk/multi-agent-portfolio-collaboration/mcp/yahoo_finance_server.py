@@ -1,6 +1,7 @@
 import json
 from enum import Enum
 import os
+import re
 import pandas as pd
 import yfinance as yf
 from mcp.server.fastmcp import FastMCP
@@ -17,6 +18,23 @@ OUTPUTS_DIR = _REPO_ROOT / "outputs"
 
 # Ensure the directory exists
 OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
+
+# Tool arguments (ticker, period, interval, ...) are model-controlled and end up
+# in output filenames, so reduce them to a single safe path component and refuse
+# any write that would land outside OUTPUTS_DIR.
+_SAFE_NAME = re.compile(r"[^A-Za-z0-9._-]")
+
+
+def _safe_base_name(base_name) -> str:
+    """Reduce a model-supplied name to a single safe path component."""
+    return _SAFE_NAME.sub("_", str(base_name)).strip(".") or "output"
+
+
+def _ensure_in_outputs(file_path: Path) -> Path:
+    resolved = file_path.resolve()
+    if OUTPUTS_DIR.resolve() not in resolved.parents:
+        raise ValueError(f"Refusing to write outside outputs directory: {file_path}")
+    return resolved
 
 # Set up logging
 LOGS_DIR = _REPO_ROOT / "logs"
@@ -40,19 +58,23 @@ def _strip_tz(df: pd.DataFrame) -> pd.DataFrame:
     return out
 
 def save_df_to_csv(df, base_name):
+    base_name = _safe_base_name(base_name)
     df_clean = _strip_tz(df)
     file_path = OUTPUTS_DIR / f"{base_name}.csv"
     if file_path.exists():
         unique_id = uuid.uuid4().hex[:8]
         file_path = OUTPUTS_DIR / f"{base_name}_{unique_id}.csv"
+    file_path = _ensure_in_outputs(file_path)
     df_clean.to_csv(file_path, index=False)
     return str(file_path), list(df_clean.columns)
 
 def save_json_to_file(data, base_name):
+    base_name = _safe_base_name(base_name)
     file_path = OUTPUTS_DIR / f"{base_name}.json"
     if file_path.exists():
         unique_id = uuid.uuid4().hex[:8]
         file_path = OUTPUTS_DIR / f"{base_name}_{unique_id}.json"
+    file_path = _ensure_in_outputs(file_path)
     with open(file_path, "w") as f:
         json.dump(data, f, indent=2)
     # Schema: for dict, top-level keys; for list, type of first element or 'list'; else type

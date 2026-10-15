@@ -16,6 +16,8 @@ Python setup:
 python3 -m venv env
 source env/bin/activate
 pip install -r requirements.txt
+export OPENAI_API_KEY=<your_key>
+export VECTOR_STORE_ID=<your_vector_store_id>
 ```
 
 Run the server:
@@ -24,7 +26,11 @@ Run the server:
 python main.py
 ```
 
-The server will start on `http://0.0.0.0:8000/sse/` using SSE transport. If you want to reach the server from the public internet, there are a variety of ways to do that including with ngrok:
+The server will start on `http://127.0.0.1:8000/sse/` using SSE transport.
+
+Exposing the server makes `search` and `fetch` callable by anyone who learns the URL - they read the entire Vector Store above using your API key. ChatGPT connectors cannot send basic-auth credentials, so while testing: point the server at a vector store that holds only non-sensitive documents, keep the tunnel up only for the duration of the test, and set `MCP_HOST=0.0.0.0` only if you intentionally need non-loopback binding. For other clients, `ngrok http 8000 --basic-auth 'user:password'` adds a gate.
+
+If you want to reach the server from the public internet, there are a variety of ways to do that including with ngrok:
 
 ```shell
 brew install ngrok 
